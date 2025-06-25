@@ -19,14 +19,19 @@
 		);
 	}
 
+
+
 	//loads inc contents
 	require_once get_theme_file_path( 'inc/acf.php' );
 
 
 
 	//Example PHP function
-	function wondercat_test_function(){
-		var_dump('foo');
+	add_filter( 'the_content', 'wondercat_test_function', 1 );
+
+	function wondercat_test_function($content){
+		$acf_example = get_field('test_one');
+		return "{$content} <h2>{$acf_example}</h2>";
 	}
 
-	wondercat_test_function();
+	
