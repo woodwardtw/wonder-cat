@@ -33,7 +33,7 @@
 		return "{$content} <h2>{$acf_example}</h2>";
 	}
 
-	//Example that saves 99 posts to a folder called data	
+	//Example that saves up to 99 posts to a folder called data	
 	function wondercat_json_cache($post_id, $post, $update) {
 	    // Only run for published posts
 	    if($post->post_type === 'post' && $post->post_status === 'publish') {
@@ -58,6 +58,14 @@
 	    }
 	}
 	add_action('save_post', 'wondercat_json_cache', 10, 3);
+
+	//increase rest response limit to 200 and can go to 
+	function wondercat_increase_rest_posts_per_page($args, $request) {
+	    $args['posts_per_page'] = 200; // or whatever limit you want
+	    return $args;
+	}
+	add_filter('rest_post_query', 'wondercat_increase_rest_posts_per_page', 10, 2);
+
 
 
 //LOGGER -- like frogger but more useful
