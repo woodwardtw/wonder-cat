@@ -67,6 +67,16 @@
 	add_filter('rest_post_query', 'wondercat_increase_rest_posts_per_page', 10, 2);
 
 
+/* Add USER EXPERIENCE to author archives */
+function ue_post_author_archive($query) {
+    if (!$query->is_main_query() || !$query->is_author()) {
+        return;
+    }
+    
+    $query->set('post_type', array('user-experience', 'post'));
+}
+add_action('pre_get_posts', 'ue_post_author_archive');
+
 
 //LOGGER -- like frogger but more useful
 
