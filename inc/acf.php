@@ -10,53 +10,60 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * 
- * tie taxonomy to form field
+ * tie taxonomy to form field https://docs.gravityforms.com/gform_pre_render/
  * 
  **/
-// NOTE: update the '1' to the ID of your form
-add_filter( 'gform_pre_render_2', 'cat_tech_update_populate_type' );
-add_filter( 'gform_pre_validation_2', 'cat_tech_update_populate_type' );
-add_filter( 'gform_pre_submission_filter_2', 'cat_tech_update_populate_type' );
-add_filter( 'gform_admin_pre_render_2', 'cat_tech_update_populate_type' );
-function cat_tech_update_populate_type( $form ) {
-  
-    foreach( $form['fields'] as &$field )  {
-  
-        //NOTE: replace 5 with your checkbox field id
-        $field_id = 5;
-        //NOTE: replace 'technology' with your custom taxonomy name
-        $custom_taxonomy = 'technology';
-        if ( $field->id != $field_id ) {
+add_filter( 'gform_pre_render_1',            'cat_tech_populate_dropdown' );
+add_filter( 'gform_pre_validation_1',        'cat_tech_populate_dropdown' );
+add_filter( 'gform_pre_submission_filter_1', 'cat_tech_populate_dropdown' );
+add_filter( 'gform_admin_pre_render_1',      'cat_tech_populate_dropdown' );
+
+function cat_tech_populate_dropdown( $form ) {
+    $field_id        = 1;               // your Drop Down field ID
+    $custom_taxonomy = 'technology';
+
+    foreach ( $form['fields'] as &$field ) {
+        if ( (int) $field->id !== (int) $field_id ) {
             continue;
         }
-  
-        $terms = get_terms( array(
-                'taxonomy' =>  $custom_taxonomy,
-                'hide_empty' => false,
-                'orderby'   =>'title',
-                'order'   =>'ASC',
-            ) ); 
-        $input_id = 1;
-        foreach( $terms as $term ) {
-  
-            //skipping index that are multiples of 10 (multiples of 10 create problems as the input IDs)
-            if ( $input_id % 10 == 0 ) {
-                $input_id++;
-            }
-  
-            $choices[] = array( 'text' => $term->name, 'value' => $term->name);
-            $inputs[] = array( 'label' => $term->name, 'id' => "{$field_id}.{$input_id}");
-  
-            $input_id++;
+
+        // Make sure this field behaves like a pure Drop Down (no sub-inputs).
+        $field->type      = 'select';   // or 'dropdown' depending on GF version; 'select' is typical
+        $field->inputType = 'select';
+        $field->inputs    = null;       // <-- critical: remove leftover sub-inputs
+
+        // Build choices
+        $choices = [];
+
+        // Optional neutral first option (recommended instead of a custom "test" sub-input)
+        //$choices[] = [ 'text' => '— Select —', 'value' => '' ];
+
+        // Top manual option (if you still want it)
+        $choices[] = [ 'text' => 'Test label', 'value' => 'Test label' ];
+
+        $terms = get_terms([
+            'taxonomy'   => $custom_taxonomy,
+            'hide_empty' => false,
+            'orderby'    => 'title',
+            'order'      => 'ASC',
+        ]);
+        if ( is_wp_error( $terms ) ) {
+            continue;
         }
-  
-        $field->choices = $choices;
-        $field->inputs = $inputs;
-  
+
+        foreach ( $terms as $term ) {
+            $choices[] = [ 'text' => $term->name, 'value' => $term->slug ];
+        }
+
+        $field->choices           = array_values( $choices );
+        $field->enableChoiceValue = false;
+        // Optional: make it feel like a placeholder (requires Enhanced UI in GF settings)
+        // $field->placeholder = 'Select a technology';
     }
-  
+
     return $form;
 }
+
 
 
 //save acf json
